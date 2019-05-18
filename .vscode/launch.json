@@ -1,0 +1,32 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    // https://marketplace.visualstudio.com/items?itemName=hbenl.vscode-firefox-debug
+    // "/Applications/Firefox Developer Edition.app/Contents/MacOS/firefox" -start-debugger-server
+    {
+      // "name": "Chrome",
+      // "type": "chrome",
+      // "request": "launch",
+      "name": "Firefox",
+      "type": "firefox",
+      "request": "attach",
+      "url": "http://localhost:3000",
+      "webRoot": "${workspaceFolder}/src",
+      // "pathMappings": [{
+      //   "url": "webpack:///src/*",
+      //   "path": "${webRoot}/*"
+      // }]
+    },
+    {
+      "name": "Chrome",
+      "type": "chrome",
+      "request": "launch",
+      "sourceMapPathOverrides": {
+        "webpack:///src/*": "${webRoot}/*"
+      },
+      "runtimeArgs": [
+        "--preserve-symlinks"
+      ]
+    }
+  ]
+}
