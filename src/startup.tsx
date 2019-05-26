@@ -17,7 +17,12 @@ const voice = factory(220);
 // getScriptProcessor(ctx, voice)
 // const activeVoice = voice.noteOn(ctx);
 // setTimeout(() => activeVoice.noteOff(), 2000)
-voice.playFor(ctx, 1)
-voice.playInFor(ctx, 1, 1)
+// voice.playFor(ctx, 1)
+// voice.playInFor(ctx, 1, 1)
+// voice.after(1, voice.playFor.bind(voice, ctx, 1))
+voice.fluent()
+.playFor(1)
+.playFromFor(1, 1)
+.perform(ctx)
 
 export const _ = null;
