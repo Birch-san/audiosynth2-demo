@@ -6,7 +6,7 @@ import * as serviceWorker from './serviceWorker';
 
 // run side-effects (like audio tests)
 // to test library on page load rather than on button click
-import './startup';
+// import './startup';
 
 ReactDOM.render(<App />, document.getElementById('root'));
 
