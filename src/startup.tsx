@@ -174,7 +174,8 @@ export interface VisualProps {
 
 interface Analysis {
     analyser: AnalyserNode
-    buffer: Uint8Array
+    // buffer: Uint8Array
+    buffer: Float32Array
 }
 
 interface KeyMapping {
@@ -228,7 +229,8 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
 
         analysisRef.current = {
             analyser,
-            buffer: new Uint8Array(analyser.frequencyBinCount)
+            // buffer: new Uint8Array(analyser.frequencyBinCount)
+            buffer: new Float32Array(analyser.frequencyBinCount)
         }
 
 
@@ -288,12 +290,18 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
 
         const keyReleases: KeyReleases = {}
         const keyDownListener = (event: KeyboardEvent) => {
-            console.log('down', event.keyCode)
+            // console.log('down', event.keyCode)
+            if (event.altKey
+                || event.shiftKey
+                || event.ctrlKey
+                || event.metaKey) {
+                return
+            }
             if (event.keyCode in mappings) {
                 event.preventDefault()
                 event.stopPropagation()
                 if (!(event.keyCode in keyReleases)) {
-                    console.warn(mappings[event.keyCode])
+                    // console.warn(mappings[event.keyCode])
                     const { noteOff, gainNode } = factory(mappings[event.keyCode].freq).noteOn(ctx)
                     gainNode.connect(analyser)
                     // setTimeout(noteOff, 1000)
@@ -302,7 +310,13 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
             }
         }
         const keyUpListener = (event: KeyboardEvent) => {
-            console.log('up', event.keyCode)
+            // console.log('up', event.keyCode)
+            if (event.altKey
+                || event.shiftKey
+                || event.ctrlKey
+                || event.metaKey) {
+                return
+            }
             if (event.keyCode in keyReleases) {
                 event.preventDefault()
                 event.stopPropagation()
@@ -331,7 +345,8 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
             return
         }
         const { analyser, buffer } = analysisRef.current
-        analyser.getByteTimeDomainData(buffer)
+        // analyser.getByteTimeDomainData(buffer)
+        analyser.getFloatTimeDomainData(buffer)
         ctx2d.clearRect(0, 0, width, height)
 
         // ctx2d.fillStyle = 'rgb(200, 200, 200)';
@@ -340,13 +355,23 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
         ctx2d.lineWidth = 2;
         ctx2d.strokeStyle = 'rgb(0, 0, 0)';
 
-        const sliceWidth = width * 1.0 / buffer.length;
+        const sliceWidth = width / buffer.length;
 
         ctx2d.beginPath()
+        // let min = Infinity
+        // let max = -Infinity
+
+        // const magnitude = 
 
         buffer.forEach((sample: number, ix: number) => {
-            const v = sample / 128.0
-            const y = v * height / 2;
+            // min = Math.min(sample, min)
+            // max = Math.max(sample, max)
+            // range is 0 to 255 with UInt8Array,
+            // or -2.something to 2.something with Float32Array
+            // const v = sample / 128.0
+            // const y = v * height / 2
+            const v = sample * 50
+            const y = v + height / 2
             const x = sliceWidth * ix
 
             if(ix) {
@@ -356,7 +381,10 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
             }
         })
 
-        ctx2d.lineTo(width, height/2);
+        // console.log(min, max)
+
+        // ctx2d.lineTo(width, height / 2);
+        ctx2d.lineTo(width, height / 2);
         ctx2d.stroke();
     })
 
