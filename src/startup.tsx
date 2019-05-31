@@ -177,6 +177,34 @@ interface Analysis {
     buffer: Uint8Array
 }
 
+interface KeyMapping {
+    keyCap: string
+    freq: number
+}
+type KeyCodeToKeyMapping = { [keyCode: number]: KeyMapping };
+
+/**
+ * I added TypeScript typings to William's takeIterator()
+ * @author William Casarin {@link https://github.com/jb55}
+ * @license MIT
+ * @see {@link https://github.com/jb55/take-iterator/blob/master/index.js} */
+function* takeIterator<T>(xs: IterableIterator<T>, n: number): IterableIterator<T> {
+    if (n === 0) return;
+    let i = 0;
+    for (let x of xs) {
+        yield x;
+        if (++i === n) break;
+    }
+}
+
+interface KeyCodeAndCap {
+    keyCap: string,
+    keyCode: number
+}
+
+type KeyReleaseCallback = () => void
+type KeyReleases = { [keyCode: number]: KeyReleaseCallback }
+
 const Visual: React.FC<VisualProps> = ({ width, height }) => {
     // const [faves, setFaves] = useState<Faves|null>(null)
     // const [analyser, setAnalyser] = useState<AnalyserNode|null>(null)
@@ -193,9 +221,10 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
         const synth = new AudioSynth({ctx})
         const voiceProfile = voiceProfiles.piano
         const factory = synth.makeVoiceFactory(voiceProfile)
-        const { noteOff, gainNode } = factory(220).noteOn(ctx)
-        gainNode.connect(analyser)
-        setTimeout(noteOff, 1000)
+
+        // const { noteOff, gainNode } = factory(220).noteOn(ctx)
+        // gainNode.connect(analyser)
+        // setTimeout(noteOff, 1000)
 
         analysisRef.current = {
             analyser,
@@ -219,6 +248,78 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
         //     gainNode,
         //     analyser,
         // })
+
+        function* harmonics (startFreq: number): IterableIterator<number> {
+            let numerator = 1
+            let denominator = 1
+            let currentFreq = startFreq
+            while (true) {
+                yield currentFreq
+                numerator++
+                currentFreq *= numerator / denominator
+                denominator++
+            }
+        }
+
+
+        const keyCaps: string[] = 'ASDFGHJKL;'.split('')
+        const keyTuples: KeyCodeAndCap[] = keyCaps.map((keyCap: string): KeyCodeAndCap => ({
+            keyCap,
+            keyCode: keyCap.charCodeAt(0),
+        })).concat([{
+            keyCap: "'",
+            keyCode: 222,
+        }, {
+            keyCap: "\\",
+            keyCode: 220,
+        }] as KeyCodeAndCap[])
+        const freqs: number[] = [...takeIterator(harmonics(110), keyTuples.length)]
+        const mappings: KeyCodeToKeyMapping = keyTuples.reduce((
+            acc: KeyCodeToKeyMapping,
+            { keyCap, keyCode }: KeyCodeAndCap,
+            ix: number,
+            ): KeyCodeToKeyMapping =>
+            Object.assign(acc, {
+                [keyCode]: {
+                    keyCap,
+                    freq: freqs[ix]
+                } as KeyMapping,
+            } as KeyCodeToKeyMapping), {})
+
+        const keyReleases: KeyReleases = {}
+        const keyDownListener = (event: KeyboardEvent) => {
+            console.log('down', event.keyCode)
+            if (event.keyCode in mappings) {
+                event.preventDefault()
+                event.stopPropagation()
+                if (!(event.keyCode in keyReleases)) {
+                    console.warn(mappings[event.keyCode])
+                    const { noteOff, gainNode } = factory(mappings[event.keyCode].freq).noteOn(ctx)
+                    gainNode.connect(analyser)
+                    // setTimeout(noteOff, 1000)
+                    keyReleases[event.keyCode] = () => noteOff()
+                }
+            }
+        }
+        const keyUpListener = (event: KeyboardEvent) => {
+            console.log('up', event.keyCode)
+            if (event.keyCode in keyReleases) {
+                event.preventDefault()
+                event.stopPropagation()
+                const callback: KeyReleaseCallback = keyReleases[event.keyCode]
+                // console.warn(callback)
+                callback()
+                delete keyReleases[event.keyCode]
+            }
+        }
+
+        document.addEventListener('keydown', keyDownListener);
+        document.addEventListener('keyup', keyUpListener);
+        return () => {
+            document.removeEventListener('keydown', keyDownListener)
+            document.removeEventListener('keyup', keyUpListener)
+            Object.entries(keyReleases).forEach(([key, callback]: [string, KeyReleaseCallback]) => callback())
+        };
     }, [])
 
     useAnimationFrame(() => {
