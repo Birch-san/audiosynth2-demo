@@ -203,6 +203,11 @@ interface KeyCodeAndCap {
     keyCode: number
 }
 
+interface KeyCodeAndCapAndFreq {
+    keyCodeAndCap: KeyCodeAndCap
+    freq: number
+}
+
 type KeyReleaseCallback = () => void
 type KeyReleases = { [keyCode: number]: KeyReleaseCallback }
 
@@ -217,8 +222,19 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
     // runs just once
     useEffect(() => {
         const ctx = new AudioContext()
+
         const analyser = ctx.createAnalyser()
         analyser.connect(ctx.destination)
+
+        /** @see {@link https://developer.mozilla.org/en-US/docs/Web/API/DynamicsCompressorNode} */
+        const compressor = ctx.createDynamicsCompressor();
+        compressor.threshold.setValueAtTime(-50, ctx.currentTime);
+        compressor.knee.setValueAtTime(40, ctx.currentTime);
+        compressor.ratio.setValueAtTime(12, ctx.currentTime);
+        compressor.attack.setValueAtTime(0, ctx.currentTime);
+        compressor.release.setValueAtTime(0.25, ctx.currentTime);
+        compressor.connect(analyser)
+
         const synth = new AudioSynth({ctx})
         const voiceProfile = voiceProfiles.piano
         const factory = synth.makeVoiceFactory(voiceProfile)
@@ -263,34 +279,71 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
             }
         }
 
+        function* harmonics2 (startFreq: number): IterableIterator<number> {
+            let numerator = 1
+            let denominator = 1
+            let currentFreq = startFreq
+            while (true) {
+                yield currentFreq
+                numerator++
+                currentFreq = startFreq * numerator / denominator
+                denominator++
+            }
+        }
 
-        const keyCaps: string[] = 'ASDFGHJKL;'.split('')
-        const keyTuples: KeyCodeAndCap[] = keyCaps.map((keyCap: string): KeyCodeAndCap => ({
-            keyCap,
-            keyCode: keyCap.charCodeAt(0),
-        })).concat([{
-            keyCap: "'",
-            keyCode: 222,
-        }, {
-            keyCap: "\\",
-            keyCode: 220,
-        }] as KeyCodeAndCap[])
-        const freqs: number[] = [...takeIterator(harmonics(110), keyTuples.length)]
-        const mappings: KeyCodeToKeyMapping = keyTuples.reduce((
+        const topRow: KeyCodeAndCapAndFreq[] = (() => {
+            const keyCaps: string[] = 'QWERTYUIOP[]'.split('')
+            const keyCodesAndCaps: KeyCodeAndCap[] = keyCaps.map((keyCap: string): KeyCodeAndCap => ({
+                keyCap,
+                keyCode: keyCap.charCodeAt(0),
+            })).concat([{
+                keyCap: "[",
+                keyCode: 219,
+            }, {
+                keyCap: "]",
+                keyCode: 221,
+            }] as KeyCodeAndCap[])
+            const freqs: number[] = [...takeIterator(harmonics2(110), keyCodesAndCaps.length)]
+            return keyCodesAndCaps.map((keyCodeAndCap: KeyCodeAndCap, ix: number): KeyCodeAndCapAndFreq => ({
+                keyCodeAndCap,
+                freq: freqs[ix],
+            }))
+        })()
+
+        const homeRow: KeyCodeAndCapAndFreq[] = (() => {
+            const keyCaps: string[] = 'ASDFGHJKL;'.split('')
+            const keyCodesAndCaps: KeyCodeAndCap[] = keyCaps.map((keyCap: string): KeyCodeAndCap => ({
+                keyCap,
+                keyCode: keyCap.charCodeAt(0),
+            })).concat([{
+                keyCap: "'",
+                keyCode: 222,
+            }, {
+                keyCap: "\\",
+                keyCode: 220,
+            }] as KeyCodeAndCap[])
+            const freqs: number[] = [...takeIterator(harmonics(110), keyCodesAndCaps.length)]
+            return keyCodesAndCaps.map((keyCodeAndCap: KeyCodeAndCap, ix: number): KeyCodeAndCapAndFreq => ({
+                keyCodeAndCap,
+                freq: freqs[ix],
+            }))
+        })()
+
+        
+        const mappings: KeyCodeToKeyMapping = [...topRow, ...homeRow].reduce((
             acc: KeyCodeToKeyMapping,
-            { keyCap, keyCode }: KeyCodeAndCap,
-            ix: number,
+            { keyCodeAndCap, freq }: KeyCodeAndCapAndFreq,
             ): KeyCodeToKeyMapping =>
             Object.assign(acc, {
-                [keyCode]: {
-                    keyCap,
-                    freq: freqs[ix]
+                [keyCodeAndCap.keyCode]: {
+                    keyCap: keyCodeAndCap.keyCap,
+                    freq,
                 } as KeyMapping,
             } as KeyCodeToKeyMapping), {})
 
         const keyReleases: KeyReleases = {}
         const keyDownListener = (event: KeyboardEvent) => {
-            // console.log('down', event.keyCode)
+            console.log('down', event.keyCode)
             if (event.altKey
                 || event.shiftKey
                 || event.ctrlKey
@@ -303,7 +356,8 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
                 if (!(event.keyCode in keyReleases)) {
                     // console.warn(mappings[event.keyCode])
                     const { noteOff, gainNode } = factory(mappings[event.keyCode].freq).noteOn(ctx)
-                    gainNode.connect(analyser)
+                    // gainNode.connect(analyser)
+                    gainNode.connect(compressor)
                     // setTimeout(noteOff, 1000)
                     keyReleases[event.keyCode] = () => noteOff()
                 }
@@ -320,6 +374,9 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
             if (event.keyCode in keyReleases) {
                 event.preventDefault()
                 event.stopPropagation()
+                if (ctx.state === 'suspended') {
+                    ctx.resume()
+                }
                 const callback: KeyReleaseCallback = keyReleases[event.keyCode]
                 // console.warn(callback)
                 callback()
@@ -370,7 +427,7 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
             // or -2.something to 2.something with Float32Array
             // const v = sample / 128.0
             // const y = v * height / 2
-            const v = sample * 50
+            const v = sample * 100
             const y = v + height / 2
             const x = sliceWidth * ix
 
