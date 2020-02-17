@@ -1,7 +1,7 @@
 import React, { useRef, useLayoutEffect, useReducer, useEffect, useState } from 'react';
 import { useRaf } from 'react-use'
 
-import { AudioSynth, voiceProfiles } from 'audiosynth2'
+import { AudioSynth, voiceProfiles } from '@birch-san/audiosynth2'
 
 // const ctx = new AudioContext()
 // const synth = new AudioSynth({ctx})
@@ -97,7 +97,7 @@ import { AudioSynth, voiceProfiles } from 'audiosynth2'
 // const [w, h]: [number, number] = [512, 400]
 
 // interface NewSamples {
-    
+
 // }
 
 const newSamplesReducer: React.Reducer<number[], number[]>
@@ -153,12 +153,12 @@ const useAnimationFrame = (callback: AnyCallback) => {
       () => callbackRef.current = callback,
       [callback]
     );
-  
+
     const loop: AnyCallback = () => {
       frameRef.current = requestAnimationFrame(loop)
       callbackRef.current()
     };
-  
+
     const frameRef = useRef<number>()
     useLayoutEffect(() => {
       frameRef.current = requestAnimationFrame(loop)
@@ -316,6 +316,9 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
                 keyCap,
                 keyCode: keyCap.charCodeAt(0),
             })).concat([{
+                keyCap: ";",
+                keyCode: 186,
+            }, {
                 keyCap: "'",
                 keyCode: 222,
             }, {
@@ -329,7 +332,7 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
             }))
         })()
 
-        
+
         const mappings: KeyCodeToKeyMapping = [...topRow, ...homeRow].reduce((
             acc: KeyCodeToKeyMapping,
             { keyCodeAndCap, freq }: KeyCodeAndCapAndFreq,
@@ -343,7 +346,7 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
 
         const keyReleases: KeyReleases = {}
         const keyDownListener = (event: KeyboardEvent) => {
-            console.log('down', event.keyCode)
+            // console.log('down', event.keyCode)
             if (event.altKey
                 || event.shiftKey
                 || event.ctrlKey
@@ -418,7 +421,7 @@ const Visual: React.FC<VisualProps> = ({ width, height }) => {
         // let min = Infinity
         // let max = -Infinity
 
-        // const magnitude = 
+        // const magnitude =
 
         buffer.forEach((sample: number, ix: number) => {
             // min = Math.min(sample, min)
