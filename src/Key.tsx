@@ -1,4 +1,4 @@
-import React, {CSSProperties} from "react";
+import React, {CSSProperties, useState} from "react";
 import {Note} from "./slices/keyboard.slice";
 import styles from "./Key.module.scss"
 
@@ -10,17 +10,31 @@ export interface KeyProps {
 }
 
 export const Key: React.FC<KeyProps> = ({ style, note, noteOn, noteOff }) => {
+  const [depressed, setDepressed] = useState(false)
+  function noteOnAndDepress() {
+    setDepressed(true)
+    return noteOn()
+  }
+  function noteOffAndRelease() {
+    setDepressed(false)
+    return noteOff()
+  }
   function dragMouseOver(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
     if (event.buttons === 1) {
-      noteOn();
+      noteOnAndDepress();
     }
   }
   function formatNote(frequency: number) {
     return frequency.toFixed(0)
   }
   return (
-    <div className={styles.key} style={style}>
-        <button onMouseDown={noteOn} onMouseOut={noteOff} onMouseOver={dragMouseOver}>{formatNote(note.frequency)}</button>
+    <div className={`${styles.key} ${depressed ? styles.depressed : ''}`} style={style}>
+        <button
+          onMouseDown={noteOnAndDepress}
+          onMouseOut={noteOffAndRelease}
+          onMouseUp={noteOffAndRelease}
+          onMouseOver={dragMouseOver}
+        >{formatNote(note.frequency)}</button>
     </div>
   )
 }

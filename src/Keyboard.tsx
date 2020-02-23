@@ -42,18 +42,24 @@ export const Keyboard: React.FC = () => {
   function makeNote(note: Note): JSX.Element {
     const { frequency } = note
     const noteState: NoteState = {}
-    const noteOn = () => {
+    function noteOn() {
       const { noteOff, gainNode } = globalAudio.voiceFactory(frequency).noteOn(globalAudio.ctx)
       noteState.noteOff = noteOff
       gainNode.connect(globalAudio.analyser)
       // console.log(noteState.activeNote)
     }
-    const noteOff = () => {
+    function noteOff() {
       noteState.noteOff && noteState.noteOff()
     }
-    return <Key style={{
-      left: toXPos(frequency) - xOffset
-    }} key={frequency} noteOn={noteOn} noteOff={noteOff} note={note}/>
+    return <Key
+      style={{
+        left: toXPos(frequency) - xOffset
+      }}
+      key={frequency}
+      noteOn={noteOn}
+      noteOff={noteOff}
+      note={note}
+    />
   }
   return (
     <div className={styles.keyboard}>
