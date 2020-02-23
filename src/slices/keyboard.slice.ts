@@ -1,4 +1,5 @@
 import {createAction, createReducer} from "@reduxjs/toolkit";
+import {takeIterator} from "../util/IterationUtils";
 
 export interface Note {
   frequency: number
@@ -6,15 +7,29 @@ export interface Note {
 export interface KeyboardState {
   notes: Note[],
 }
+
+function* generateChromaticScale(baseFreq: number) {
+  let i = 0;
+  while(true) {
+    yield baseFreq * Math.pow(2, i++ / 12);
+  }
+}
+
 function initialState(): KeyboardState {
+  // const notes: Note[] = [{
+  //   frequency: 440
+  // }, {
+  //   frequency: 880
+  // }, {
+  //   frequency: 1320
+  // }]
+  const notes: Note[] = [...takeIterator(generateChromaticScale(220), 13)]
+    .map(frequency => ({
+      frequency
+    }));
+
   return {
-    notes: [{
-      frequency: 440
-    }, {
-      frequency: 880
-    }, {
-      frequency: 1320
-    }],
+    notes,
   }
 }
 

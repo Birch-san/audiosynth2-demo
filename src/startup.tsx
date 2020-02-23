@@ -2,6 +2,7 @@ import React, { useRef, useLayoutEffect, useReducer, useEffect, useState } from 
 import { useRaf } from 'react-use'
 
 import { AudioSynth, voiceProfiles } from '@birch-san/audiosynth2'
+import {takeIterator} from "./util/IterationUtils";
 
 // const ctx = new AudioContext()
 // const synth = new AudioSynth({ctx})
@@ -183,20 +184,6 @@ interface KeyMapping {
     freq: number
 }
 type KeyCodeToKeyMapping = { [keyCode: number]: KeyMapping };
-
-/**
- * I added TypeScript typings to William's takeIterator()
- * @author William Casarin {@link https://github.com/jb55}
- * @license MIT
- * @see {@link https://github.com/jb55/take-iterator/blob/master/index.js} */
-function* takeIterator<T>(xs: IterableIterator<T>, n: number): IterableIterator<T> {
-    if (n === 0) return;
-    let i = 0;
-    for (let x of xs) {
-        yield x;
-        if (++i === n) break;
-    }
-}
 
 interface KeyCodeAndCap {
     keyCap: string,
