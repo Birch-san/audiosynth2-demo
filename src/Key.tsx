@@ -28,13 +28,19 @@ export const Key: React.FC<KeyProps> = ({ style, note, noteOn, noteOff }) => {
     return frequency.toFixed(0)
   }
   return (
-    <button
-      className={`${styles.key} ${depressed ? styles.depressed : ''}`}
-      style={style}
-      onMouseDown={noteOnAndDepress}
-      onMouseOut={noteOffAndRelease}
-      onMouseUp={noteOffAndRelease}
-      onMouseOver={dragMouseOver}
-    >{formatNote(note.frequency)}</button>
+    <div style={style} className={`${styles.container} ${
+      note.inScale ? '' : styles.outOfScale }`}>
+      <div className={`${styles.marker} ${
+        note.inScale ? '' : styles.outOfScale }`}>&nbsp;</div>
+      <button
+        className={`${styles.key} ${
+          depressed ? styles.depressed : ''} ${
+          note.inScale ? '' : styles.outOfScale }`}
+        onMouseDown={noteOnAndDepress}
+        onMouseOut={noteOffAndRelease}
+        onMouseUp={noteOffAndRelease}
+        onMouseOver={dragMouseOver}
+      >{formatNote(note.frequency)}</button>
+    </div>
   )
 }

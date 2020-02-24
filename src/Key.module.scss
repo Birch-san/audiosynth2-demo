@@ -1,17 +1,42 @@
-.key {
+.marker {
+  border-left-style: solid;
+  border-left-color: #ccc;
+
+  &.outOfScale {
+    border-left-color: #333;
+  }
+}
+
+.container {
   position: absolute;
-  width: 50px;
+  &.outOfScale {
+    z-index: 1;
+  }
+}
+
+.key {
+  width: 120px;
   height: 300px;
+  padding-top: 250px;
+  padding-right: 80px;
+  box-sizing: border-box;
+  border-style: none;
+  background-color: #ddd;
+  border-left-style: solid;
+  border-left-color: #ccc;
+  border-left-width: 3px;
+
+  &.outOfScale {
+    width: 80px;
+    padding-right: 40px;
+    height: 200px;
+    padding-top: 150px;
+    background-color: #666;
+    color: white;
+    border-left-color: #333;
+  }
 
   &.depressed {
     background-color: cornflowerblue;
   }
 }
-
-//.key button {
-//
-//}
-//
-//.depressed button {
-//
-//}

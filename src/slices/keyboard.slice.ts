@@ -3,15 +3,35 @@ import {takeIterator} from "../util/IterationUtils";
 
 export interface Note {
   frequency: number
+  inScale: boolean
 }
 export interface KeyboardState {
   notes: Note[],
 }
 
-function* generateChromaticScale(baseFreq: number) {
+function* chromaticDegreesInMajor(): IterableIterator<boolean> {
+  while(true) {
+    yield true; // 0
+    yield false;
+    yield true;
+    yield false;
+    yield true;
+    yield true;
+    yield false;
+    yield true;
+    yield false;
+    yield true;
+    yield false;
+    yield true;
+  }
+}
+
+function* generateChromaticScale(baseFreq: number, scaleClassifier: IterableIterator<boolean>): IterableIterator<Note> {
   let i = 0;
   while(true) {
-    yield baseFreq * Math.pow(2, i++ / 12);
+    const inScale = scaleClassifier.next().value;
+    const frequency = baseFreq * Math.pow(2, i++ / 12)
+    yield { frequency, inScale }
   }
 }
 
@@ -23,10 +43,13 @@ function initialState(): KeyboardState {
   // }, {
   //   frequency: 1320
   // }]
-  const notes: Note[] = [...takeIterator(generateChromaticScale(220), 13)]
-    .map(frequency => ({
-      frequency
-    }));
+  const notes: Note[] = [...takeIterator(
+    generateChromaticScale(
+      220,
+      chromaticDegreesInMajor()
+    ),
+    13
+  )];
 
   return {
     notes,
