@@ -1,7 +1,17 @@
 .key {
   position: absolute;
+  width: 50px;
+  height: 300px;
+
+  &.depressed {
+    background-color: cornflowerblue;
+  }
 }
 
-.depressed button {
-  background-color: cornflowerblue;
-}
+//.key button {
+//
+//}
+//
+//.depressed button {
+//
+//}
