@@ -2,7 +2,7 @@ import React from "react";
 import {Key} from "./Key";
 import {useSelector} from "react-redux";
 import {RootState} from "./store";
-import {eqNotes, Note} from "./slices/keyboard.slice";
+import {eqNotes, Keyboards, Note, NoteType} from "./slices/keyboard.slice";
 import {globalAudio} from "./globalAudio";
 import {NoteOff} from "@birch-san/audiosynth2";
 import styles from "./Keyboard.module.scss"
@@ -22,24 +22,24 @@ import styles from "./Keyboard.module.scss"
 //   return state;
 // }
 
-// export interface KeyboardProps {
-//   notes: Note[]
-// }
+export interface KeyboardProps {
+  keyboard: Keyboards
+}
 
 interface NoteState {
   noteOff? : NoteOff
 }
 
-export const Keyboard: React.FC = () => {
+export const Keyboard: React.FC<KeyboardProps> = ({ keyboard }) => {
   // const dispatch = useDispatch()
   // const [{ notes }, dispatch] = useReducer(reducer, initialState())
-  const notes = useSelector((state: RootState): Note[] => state.keyboard.notes, eqNotes)
+  const notes = useSelector((state: RootState): Note<NoteType>[] => state.keyboard.keyboards[keyboard].notes, eqNotes)
   const baseFreq = notes.length ? notes[0].frequency : 0
   function toXPos(frequency: number) {
     return Math.log2(frequency) * 700
   }
   const xOffset = toXPos(baseFreq)
-  function makeNote(note: Note): JSX.Element {
+  function makeNote(note: Note<NoteType>): JSX.Element {
     const { frequency } = note
     const noteState: NoteState = {}
     function noteOn() {
@@ -53,7 +53,8 @@ export const Keyboard: React.FC = () => {
     }
     return <Key
       style={{
-        left: toXPos(frequency) - xOffset
+        left: toXPos(frequency) - xOffset,
+        top: (note.type === 'harmonic' && 100 * note.repeat) || undefined
       }}
       key={frequency}
       noteOn={noteOn}

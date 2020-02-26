@@ -1,9 +1,9 @@
 import React, {CSSProperties, useState} from "react";
-import {Note} from "./slices/keyboard.slice";
+import {Note, NoteType} from "./slices/keyboard.slice";
 import styles from "./Key.module.scss"
 
 export interface KeyProps {
-  note: Note
+  note: Note<NoteType>
   noteOn: () => void
   noteOff: () => void
   style?: CSSProperties
@@ -29,13 +29,13 @@ export const Key: React.FC<KeyProps> = ({ style, note, noteOn, noteOff }) => {
   }
   return (
     <div style={style} className={`${styles.container} ${
-      note.inScale ? '' : styles.outOfScale }`}>
+      note.type === 'chromatic' && !note.inScale ? styles.outOfScale : '' }`}>
       <div className={`${styles.marker} ${
-        note.inScale ? '' : styles.outOfScale }`}>&nbsp;</div>
+        note.type === 'chromatic' && !note.inScale ? styles.outOfScale : '' }`}>&nbsp;</div>
       <button
         className={`${styles.key} ${
           depressed ? styles.depressed : ''} ${
-          note.inScale ? '' : styles.outOfScale }`}
+          note.type === 'chromatic' && !note.inScale ? styles.outOfScale : '' }`}
         onMouseDown={noteOnAndDepress}
         onMouseOut={noteOffAndRelease}
         onMouseUp={noteOffAndRelease}
